@@ -1,6 +1,8 @@
 /*
 
   BPM.ino
+  Version 0.05 24.09.2020
+  (c) 2020 by Wolfgang Schuster
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
@@ -50,7 +52,7 @@ void setup(void)
 //  pinMode(A0, INPUT_PULLUP);
   u8x8.begin();
   u8x8.setPowerSave(0);
-  attachInterrupt(0, functiontrigger, RISING);
+  attachInterrupt(0, tick, RISING);
   attachInterrupt(1, functionmode, RISING);
   Timer1.initialize(500000);
   Timer1.attachInterrupt(maketick);
@@ -62,7 +64,6 @@ void setup(void)
 void loop(void)
 {
   potialt=poti;
-  poti=analogRead(A0);
   werte[feldzaehler]=analogRead(A0);
   feldzaehler++;
   if(feldzaehler>19)
@@ -75,29 +76,46 @@ void loop(void)
 //  if(istrigger==true) {
 //    u8x8.clearLine(4);
   istrigger=false;
-  u8x8.drawString(1,0,"BPM");
+
+  u8x8.setFont(u8x8_font_open_iconic_play_2x2);
+  u8x8.setCursor(14, 0);
+  if(inputmode==true)
+    u8x8.print(char(76));
+  else
+    u8x8.print(char(69));
+ 
+  u8x8.setFont(u8x8_font_profont29_2x3_r);
+  u8x8.setCursor(0, 0);
+  u8x8.print("BPM");
   
   if(inputmode==true) {
     u8x8.setCursor(1, 4);
+    if(60000/(newtime-oldtime)<10)
+    {
+      u8x8.print("  ");
+      u8x8.setCursor(5, 4);
+    }
+    else if(60000/(newtime-oldtime)<100)
+    {
+      u8x8.print(" ");
+      u8x8.setCursor(3, 4);
+    }
     u8x8.print(60000/(newtime-oldtime));
   }
-  else if(potialt!=poti) {
+  else {
     u8x8.setCursor(1, 4);
-    u8x8.print("    ");
-    u8x8.setCursor(1, 4);
+    if(poti<10)
+    {
+      u8x8.print("  ");
+      u8x8.setCursor(5, 4);
+    }
+    else if(poti<100)
+    {
+      u8x8.print(" ");
+      u8x8.setCursor(3, 4);
+    }
     u8x8.print(poti);
-}
-//  else {
-//  }
-//  }
-}
-
-void functiontrigger() {
-  istrigger = true;
-  oldtime = newtime;
-  newtime = millis();
-  oldzaehler=zaehler;
-  zaehler++;
+  }
 }
 
 void functionmode() {
@@ -121,7 +139,12 @@ void maketick() {
 }
 
 void tick() {
-    digitalWrite(4, HIGH);
-    delay(20);
-    digitalWrite(4,LOW);  
+  istrigger = true;
+  oldtime = newtime;
+  newtime = millis();
+  oldzaehler=zaehler;
+  zaehler++;
+  digitalWrite(4, HIGH);
+  delay(20);
+  digitalWrite(4,LOW);  
 }
